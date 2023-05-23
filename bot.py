@@ -24,14 +24,12 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global TEMP_LANG
     TEMP_LANG = "en"
     await update.message.reply_text("Language results are shown in has been changed successfully!/help")
-    pass
 
 
 async def ukrainian(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global TEMP_LANG
     TEMP_LANG = "uk"
     await update.message.reply_text("Мову відображення результатів успішно змінено!/help")
-    pass
 
 
 async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -43,26 +41,22 @@ async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         + ANSWER_POPULAR[TEMP_LANG]
     )
     await update.message.reply_text(change_language + filter)
-    pass
 
 
 async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global SHOW_POPULAR
     SHOW_POPULAR = True
     await update.message.reply_text(ANSWER_POPULAR[TEMP_LANG] + "(max = 5)/help")
-    pass
 
 
 async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global SHOW_POPULAR
     SHOW_POPULAR = False
     await update.message.reply_text(ANSWER_ALL[TEMP_LANG] + "(unlimited)/help")
-    pass
 
 
 async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Привіт, чого бажаєте?/help")
-    pass
 
 
 async def update_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -73,7 +67,6 @@ async def update_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not search.results:
         answer = {"en": "No result. Please, change your query", "uk": "Нічого не знайдено. Будь ласка, змініть запит"}
         await update.message.reply_text(answer[TEMP_LANG] + "/help")
-        pass
 
     res = sorted(search.results, key=lambda k: k["popularity"], reverse=True)
 
@@ -105,7 +98,6 @@ async def update_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await update.message.reply_text(film_info, parse_mode=ParseMode.MARKDOWN)
         await update.message.reply_photo(poster_path)
         k += 1
-    pass
 
 
 app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
