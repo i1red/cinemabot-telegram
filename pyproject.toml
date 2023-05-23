@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "cinemabot-telegram"
+version = "0.1.0"
+description = ""
+authors = ["Ivan Krasnoshchok <ivankras67@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-telegram-bot = "^20.3"
+tmdbsimple = "^2.9.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
