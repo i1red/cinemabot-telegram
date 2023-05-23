@@ -1,8 +1,9 @@
 ﻿import os
 
 import tmdbsimple as tmdb
+from telegram import Update
 from telegram.constants import ParseMode
-from telegram.ext import CommandHandler, MessageHandler, ApplicationBuilder, filters
+from telegram.ext import CommandHandler, MessageHandler, ApplicationBuilder, filters, ContextTypes
 
 tmdb.API_KEY = os.getenv("TMDB_API_KEY")
 
@@ -19,21 +20,21 @@ ANSWER_POPULAR = {
 }
 
 
-async def english(update, context):
+async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global TEMP_LANG
     TEMP_LANG = "en"
     await update.message.reply_text("Language results are shown in has been changed successfully!/help")
     pass
 
 
-async def ukrainian(update, context):
+async def ukrainian(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global TEMP_LANG
     TEMP_LANG = "uk"
     await update.message.reply_text("Мову відображення результатів успішно змінено!/help")
     pass
 
 
-async def help_message(update, context):
+async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     change_language = "To change language:\n/en - English" + "\n/uk - Українська"
     filter = (
         "\nTo filter by popularity:\n/showall - "
@@ -45,26 +46,26 @@ async def help_message(update, context):
     pass
 
 
-async def show_popular(update, context):
+async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global SHOW_POPULAR
     SHOW_POPULAR = True
     await update.message.reply_text(ANSWER_POPULAR[TEMP_LANG] + "(max = 5)/help")
     pass
 
 
-async def show_all(update, context):
+async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     global SHOW_POPULAR
     SHOW_POPULAR = False
     await update.message.reply_text(ANSWER_ALL[TEMP_LANG] + "(unlimited)/help")
     pass
 
 
-async def start_messaging(update, context):
+async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Привіт, чого бажаєте?/help")
     pass
 
 
-async def update_message(update, context):
+async def update_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     search = tmdb.Search()
     searched_film = update.message.text.lower()
     search.movie(query=searched_film, language=TEMP_LANG)
