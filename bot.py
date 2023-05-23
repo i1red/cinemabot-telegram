@@ -11,11 +11,13 @@ app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 temp_lang = "en"
 show_popular = True
 
-answerAll = {"en": "All found films will be shown", "uk": "Усі знайдені фільми будуть відображені", "zh": "將顯示所有找到的電影"}
+answerAll = {
+    "en": "All found films will be shown",
+    "uk": "Усі знайдені фільми будуть відображені",
+}
 answerPopular = {
     "en": "Only the most popular films will be shown",
     "uk": "Тільки айпопулярніші фільми будуть відображені",
-    "zh": "只會播放最受歡迎的電影",
 }
 
 
@@ -33,15 +35,8 @@ async def ukrainian(update, context):
     pass
 
 
-async def chinese(update, context):
-    global temp_lang
-    temp_lang = "zh"
-    await update.message.reply_text("語言結果顯示已成功更改!/help")
-    pass
-
-
 async def helpMessage(update, context):
-    changeLanguage = "To change language:\n/en - English" + "\n/zh - 中國" + "\n/uk - Українська"
+    changeLanguage = "To change language:\n/en - English" + "\n/uk - Українська"
     Filter = (
         "\nTo filter by popularity:\n/showall - "
         + answerAll[temp_lang]
@@ -77,11 +72,7 @@ async def updateMessage(update, context):
     search.movie(query=searched_film, language=temp_lang)
 
     if not search.results:
-        answer = {
-            "en": "No result. Please, change your query",
-            "uk": "Нічого не знайдено. Будь ласка, змініть запит",
-            "zh": "沒有結果。 請更改您的查詢",
-        }
+        answer = {"en": "No result. Please, change your query", "uk": "Нічого не знайдено. Будь ласка, змініть запит"}
         await update.message.reply_text(answer[temp_lang] + "/help")
         pass
 
@@ -124,7 +115,6 @@ app.add_handler(CommandHandler("showall", showAll))
 app.add_handler(CommandHandler("help", helpMessage))
 app.add_handler(CommandHandler("en", english))
 app.add_handler(CommandHandler("uk", ukrainian))
-app.add_handler(CommandHandler("zh", chinese))
 app.add_handler(MessageHandler(filters.TEXT, updateMessage))
 
 
