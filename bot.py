@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 tmdb.API_KEY = os.getenv("TMDB_API_KEY")
 
 DEFAULT_LANGUAGE: Final[str] = "en"
-SHOW_POPULAR: bool = True
+DEFAULT_SHOW_POPULAR: bool = False
 BASE_POSTER_PATH: Final[str] = "http://image.tmdb.org/t/p/w780"
 
 
@@ -57,8 +57,7 @@ async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     language = context.chat_data.get("language", DEFAULT_LANGUAGE)
 
-    global SHOW_POPULAR
-    SHOW_POPULAR = True
+    context.chat_data["show_popular"] = True
 
     await update.message.reply_text(ANSWER_POPULAR[language] + "(max = 5)/help")
 
@@ -66,8 +65,7 @@ async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     language = context.chat_data.get("language", DEFAULT_LANGUAGE)
 
-    global SHOW_POPULAR
-    SHOW_POPULAR = False
+    context.chat_data["show_popular"] = False
 
     await update.message.reply_text(ANSWER_ALL[language] + "(unlimited)/help")
 
@@ -79,6 +77,7 @@ async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     language = context.chat_data.get("language", DEFAULT_LANGUAGE)
+    show_popular = context.chat_data.get("show_popular", DEFAULT_SHOW_POPULAR)
 
     search = tmdb.Search()
     movie_query = update.message.text.lower()
@@ -88,7 +87,7 @@ async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text(ANSWER_NO_RESULT[language] + "/help")
 
     movie_properties_list = sorted(search.results, key=lambda movie_props: movie_props["popularity"], reverse=True)
-    if SHOW_POPULAR:
+    if show_popular:
         movie_properties_list = movie_properties_list[:5]
 
     for movie_properties in movie_properties_list:
