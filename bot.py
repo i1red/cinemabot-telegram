@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 
 tmdb.API_KEY = os.getenv("TMDB_API_KEY")
 
-TEMP_LANG: str = "en"
+DEFAULT_LANGUAGE: Final[str] = "en"
 SHOW_POPULAR: bool = True
 BASE_POSTER_PATH: Final[str] = "http://image.tmdb.org/t/p/w780"
 
 
+ANSWER_START = {"en": "Hi, what are you looking for?", "uk": "Привіт, що шукаєте?"}
 ANSWER_ALL = {
     "en": "All found films will be shown",
     "uk": "Усі знайдені фільми будуть відображені",
@@ -27,55 +28,64 @@ ANSWER_POPULAR = {
     "en": "Only the most popular films will be shown",
     "uk": "Тільки айпопулярніші фільми будуть відображені",
 }
+ANSWER_NO_RESULT = {"en": "No result. Please, change your query", "uk": "Нічого не знайдено. Будь ласка, змініть запит"}
+ANSWER_NO_POSTER = {"en": "No poster", "uk": "Без постеру"}
 
 
 async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    global TEMP_LANG
-    TEMP_LANG = "en"
+    context.chat_data["language"] = "en"
     await update.message.reply_text("Language results are shown in has been changed successfully!/help")
 
 
 async def ukrainian(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    global TEMP_LANG
-    TEMP_LANG = "uk"
+    context.chat_data["language"] = "uk"
     await update.message.reply_text("Мову відображення результатів успішно змінено!/help")
 
 
 async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    language = context.chat_data.get("language", DEFAULT_LANGUAGE)
+
     change_language = "To change language:\n/en - English" + "\n/uk - Українська"
     filter = (
-        "\nTo filter by popularity:\n/showall - "
-        + ANSWER_ALL[TEMP_LANG]
-        + "\n/showpopular - "
-        + ANSWER_POPULAR[TEMP_LANG]
+        "To filter by popularity:\n"
+        + f"/showall - {ANSWER_ALL[language]}\n"
+        + f"/showpopular - {ANSWER_POPULAR[language]}"
     )
-    await update.message.reply_text(change_language + filter)
+    await update.message.reply_text(change_language + "\n" + filter)
 
 
 async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    language = context.chat_data.get("language", DEFAULT_LANGUAGE)
+
     global SHOW_POPULAR
     SHOW_POPULAR = True
-    await update.message.reply_text(ANSWER_POPULAR[TEMP_LANG] + "(max = 5)/help")
+
+    await update.message.reply_text(ANSWER_POPULAR[language] + "(max = 5)/help")
 
 
 async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    language = context.chat_data.get("language", DEFAULT_LANGUAGE)
+
     global SHOW_POPULAR
     SHOW_POPULAR = False
-    await update.message.reply_text(ANSWER_ALL[TEMP_LANG] + "(unlimited)/help")
+
+    await update.message.reply_text(ANSWER_ALL[language] + "(unlimited)/help")
 
 
 async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Привіт, чого бажаєте?/help")
+    language = context.chat_data.get("language", DEFAULT_LANGUAGE)
+    await update.message.reply_text(ANSWER_START[language] + "/help")
 
 
 async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    language = context.chat_data.get("language", DEFAULT_LANGUAGE)
+
     search = tmdb.Search()
     movie_query = update.message.text.lower()
-    search.movie(query=movie_query, language=TEMP_LANG)
+    search.movie(query=movie_query, language=language)
 
     if not search.results:
-        answer = {"en": "No result. Please, change your query", "uk": "Нічого не знайдено. Будь ласка, змініть запит"}
-        await update.message.reply_text(answer[TEMP_LANG] + "/help")
+        await update.message.reply_text(ANSWER_NO_RESULT[language] + "/help")
 
     movie_properties_list = sorted(search.results, key=lambda movie_props: movie_props["popularity"], reverse=True)
     if SHOW_POPULAR:
@@ -87,10 +97,10 @@ async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await update.message.reply_photo(poster_path)
         except TypeError:
             logger.error("Poster path is None")
-            await update.message.reply_text("No poster 😞", parse_mode=ParseMode.MARKDOWN)
+            await update.message.reply_text(ANSWER_NO_POSTER[language] + "😞", parse_mode=ParseMode.MARKDOWN)
         except telegram.error.BadRequest:
             logger.error(f"Failed to retrieve poster {poster_path}")
-            await update.message.reply_text("No poster 😞", parse_mode=ParseMode.MARKDOWN)
+            await update.message.reply_text(ANSWER_NO_POSTER[language] + "😞", parse_mode=ParseMode.MARKDOWN)
 
         title = movie_properties["title"]
         release_date = movie_properties["release_date"]
