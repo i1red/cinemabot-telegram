@@ -86,6 +86,14 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "logging"
+version = "0.4.9.6"
+description = "A logging module for Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "python-telegram-bot"
 version = "20.3"
 description = "We have made you a wrapper you can't refuse"
@@ -161,7 +169,7 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "c85986dc2dc5526c3f230ed3d10dc43b58107f9b3f8c4dc9aa8d2e81a9d27574"
+content-hash = "62d154d3a35ef6a12bff55b14a0ada29cea83e189490f5e6cbbee9b40bb1940d"
 
 [metadata.files]
 anyio = [
@@ -264,6 +272,9 @@ httpx = [
 idna = [
     {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
     {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
+]
+logging = [
+    {file = "logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417"},
 ]
 python-telegram-bot = [
     {file = "python-telegram-bot-20.3.tar.gz", hash = "sha256:73e46a534be9d1c790ce8b494765cca18a5c2f3f5b4932d83bcb06bb0051eb4a"},

@@ -1,14 +1,23 @@
-﻿import os
+﻿import logging
+import os
+import sys
+from typing import Final
 
+import telegram.error
 import tmdbsimple as tmdb
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, MessageHandler, ApplicationBuilder, filters, ContextTypes
 
+
+logger = logging.getLogger(__name__)
+
 tmdb.API_KEY = os.getenv("TMDB_API_KEY")
 
-TEMP_LANG = "en"
-SHOW_POPULAR = True
+TEMP_LANG: str = "en"
+SHOW_POPULAR: bool = True
+BASE_POSTER_PATH: Final[str] = "http://image.tmdb.org/t/p/w780"
+
 
 ANSWER_ALL = {
     "en": "All found films will be shown",
@@ -59,45 +68,38 @@ async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text("Привіт, чого бажаєте?/help")
 
 
-async def update_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     search = tmdb.Search()
-    searched_film = update.message.text.lower()
-    search.movie(query=searched_film, language=TEMP_LANG)
+    movie_query = update.message.text.lower()
+    search.movie(query=movie_query, language=TEMP_LANG)
 
     if not search.results:
         answer = {"en": "No result. Please, change your query", "uk": "Нічого не знайдено. Будь ласка, змініть запит"}
         await update.message.reply_text(answer[TEMP_LANG] + "/help")
 
-    res = sorted(search.results, key=lambda k: k["popularity"], reverse=True)
+    movie_properties_list = sorted(search.results, key=lambda movie_props: movie_props["popularity"], reverse=True)
+    if SHOW_POPULAR:
+        movie_properties_list = movie_properties_list[:5]
 
-    counter = 0
-    k = 0
-    for i in res:
-        if k == 5 and SHOW_POPULAR == True:
-            break
-        name = str(i["title"]).lower()
-        if name.find(searched_film) == -1 and counter != 0:
-            continue
-        if name.find(searched_film) != -1:
-            counter += 1
-        film_info = (
-            "\t"
-            + "*"
-            + str(i["title"])
-            + ", "
-            + str(i["release_date"])
-            + ", "
-            + str(i["vote_average"])
-            + "/10"
-            + "*"
-            + "\U0001F37F"
-            + "\n\t"
-            + str(i["overview"])
-        )
-        poster_path = "http://image.tmdb.org/t/p/w780" + str(i["poster_path"])
-        await update.message.reply_text(film_info, parse_mode=ParseMode.MARKDOWN)
-        await update.message.reply_photo(poster_path)
-        k += 1
+    for movie_properties in movie_properties_list:
+        try:
+            poster_path = BASE_POSTER_PATH + movie_properties["poster_path"]
+            await update.message.reply_photo(poster_path)
+        except TypeError:
+            logger.error("Poster path is None")
+            await update.message.reply_text("No poster 😞", parse_mode=ParseMode.MARKDOWN)
+        except telegram.error.BadRequest:
+            logger.error(f"Failed to retrieve poster {poster_path}")
+            await update.message.reply_text("No poster 😞", parse_mode=ParseMode.MARKDOWN)
+
+        title = movie_properties["title"]
+        release_date = movie_properties["release_date"]
+        rating = round(movie_properties["vote_average"], 1)
+        overview = movie_properties["overview"]
+
+        key_details = "*" + f"{title}, {release_date}, {rating}/10" + "*" + "🍿"
+        movie_info = key_details + "\n" + overview
+        await update.message.reply_text(movie_info, parse_mode=ParseMode.MARKDOWN)
 
 
 app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
@@ -108,8 +110,9 @@ app.add_handler(CommandHandler("showall", show_all))
 app.add_handler(CommandHandler("help", help_message))
 app.add_handler(CommandHandler("en", english))
 app.add_handler(CommandHandler("uk", ukrainian))
-app.add_handler(MessageHandler(filters.TEXT, update_message))
+app.add_handler(MessageHandler(filters.TEXT, query_movies))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     app.run_polling()
