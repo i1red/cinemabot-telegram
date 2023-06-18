@@ -9,6 +9,7 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, MessageHandler, ApplicationBuilder, filters, ContextTypes
 
+from bot.chat_data import ChatData
 from bot.utility.language import is_language_supported, get_language_name_map, LanguageCode
 from bot.utility.message import get_message
 
@@ -16,95 +17,92 @@ logger = logging.getLogger(__name__)
 
 tmdb.API_KEY = os.getenv("TMDB_API_KEY")
 
-DEFAULT_LANGUAGE_CODE: Final[LanguageCode] = "en"
-DEFAULT_SHOW_POPULAR: bool = False
 BASE_POSTER_PATH: Final[str] = "http://image.tmdb.org/t/p/w780"
 
 
 async def change_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    language_code = context.chat_data.get("language_code", DEFAULT_LANGUAGE_CODE)
+    chat_data = ChatData(context)
 
     try:
-        (new_language,) = context.args
+        (new_language_code,) = context.args
     except TypeError:
-        message = get_message("Required arguments were not provided", language_code)
+        message = get_message("Required arguments were not provided", chat_data.language_code)
         await update.message.reply_text(message + "/help")
         return
     except ValueError:
-        message = get_message("Incorrect number of arguments", language_code)
+        message = get_message("Incorrect number of arguments", chat_data.language_code)
         await update.message.reply_text(message + "/help")
         return
 
-    if not is_language_supported(new_language):
-        message = get_message("Language not supported", language_code)
+    if not is_language_supported(new_language_code):
+        message = get_message("Language not supported", chat_data.language_code)
         await update.message.reply_text(message + "/help")
         return
 
-    context.chat_data["language_code"] = new_language
-    message = get_message("The language for displaying results has been changed successfully!", new_language)
+    chat_data.language_code = new_language_code
+    message = get_message("The language for displaying results has been changed successfully!", new_language_code)
     await update.message.reply_text(message + "/help")
 
 
 async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    language_code = context.chat_data.get("language_code", DEFAULT_LANGUAGE_CODE)
+    chat_data = ChatData(context)
 
     change_language = (
-        get_message("Change language", language_code)
+        get_message("Change language", chat_data.language_code)
         + "\n"
         + "\n".join(f"/lang {lang_code} - {lang_name}" for lang_code, lang_name in get_language_name_map().items())
     )
     filter = (
-        get_message("Filter by popularity", language_code)
+        get_message("Filter by popularity", chat_data.language_code)
         + "\n"
         + "/show_all - "
-        + get_message("All found films will be shown", language_code)
+        + get_message("All found films will be shown", chat_data.language_code)
         + "\n"
         + "/show_popular - "
-        + get_message("Only the most popular films will be shown", language_code)
+        + get_message("Only the most popular films will be shown", chat_data.language_code)
         + "\n"
     )
     await update.message.reply_text(change_language + "\n" + filter)
 
 
 async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    language_code = context.chat_data.get("language_code", DEFAULT_LANGUAGE_CODE)
+    chat_data = ChatData(context)
 
-    context.chat_data["show_popular"] = True
+    chat_data.show_popular = True
 
-    message = get_message("Only the most popular films will be shown", language_code)
+    message = get_message("Only the most popular films will be shown", chat_data.language_code)
     await update.message.reply_text(message + "(max = 5)/help")
 
 
 async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    language_code = context.chat_data.get("language_code", DEFAULT_LANGUAGE_CODE)
+    chat_data = ChatData(context)
 
-    context.chat_data["show_popular"] = False
+    chat_data.show_popular = False
 
-    message = get_message("All found films will be shown", language_code)
+    message = get_message("All found films will be shown", chat_data.language_code)
     await update.message.reply_text(message + "(unlimited)/help")
 
 
 async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    language_code = context.chat_data.get("language_code", DEFAULT_LANGUAGE_CODE)
+    chat_data = ChatData(context)
 
-    message = get_message("Hi, what are you looking for?", language_code)
+    message = get_message("Hi, what are you looking for?", chat_data.language_code)
     await update.message.reply_text(message + "/help")
 
 
 async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    language_code = context.chat_data.get("language_code", DEFAULT_LANGUAGE_CODE)
-    show_popular = context.chat_data.get("show_popular", DEFAULT_SHOW_POPULAR)
+    chat_data = ChatData(context)
 
     search = tmdb.Search()
     movie_query = update.message.text.lower()
-    search.movie(query=movie_query, language=language_code)
+    search.movie(query=movie_query, language=chat_data.language_code)
 
     if not search.results:
-        message = get_message("No result. Please, change your query", language_code)
+        message = get_message("No result. Please, change your query", chat_data.language_code)
         await update.message.reply_text(message + "/help")
 
     movie_properties_list = sorted(search.results, key=lambda movie_props: movie_props["popularity"], reverse=True)
-    if show_popular:
+    if chat_data.show_popular:
         movie_properties_list = movie_properties_list[:5]
 
     for movie_properties in movie_properties_list:
@@ -113,11 +111,11 @@ async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await update.message.reply_photo(poster_path)
         except TypeError:
             logger.error("Poster path is None")
-            message = get_message("No poster", language_code)
+            message = get_message("No poster", chat_data.language_code)
             await update.message.reply_text(message + "😞", parse_mode=ParseMode.MARKDOWN)
         except telegram.error.BadRequest:
             logger.error(f"Failed to retrieve poster {poster_path}")
-            message = get_message("No poster", language_code)
+            message = get_message("No poster", chat_data.language_code)
             await update.message.reply_text(message + "😞", parse_mode=ParseMode.MARKDOWN)
 
         title = movie_properties["title"]
