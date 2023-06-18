@@ -66,7 +66,7 @@ async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     chat_data.show_popular = True
 
     message = get_message("Only the most popular films will be shown", chat_data.language_code)
-    await update.message.reply_text(message + "(max = 5)/help")
+    await update.message.reply_text(message + "/help")
 
 
 async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -75,7 +75,7 @@ async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data.show_popular = False
 
     message = get_message("All found films will be shown", chat_data.language_code)
-    await update.message.reply_text(message + "(unlimited)/help")
+    await update.message.reply_text(message + "/help")
 
 
 async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -102,15 +102,15 @@ async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     for movie_properties in movie_properties_list:
         if movie_properties.poster_uri is None:
             logger.info("Poster uri is None")
-            message = get_message("No poster", chat_data.language_code)
-            await update.message.reply_text(message + "😞", parse_mode=ParseMode.MARKDOWN)
+            message = get_message("No poster😞", chat_data.language_code)
+            await update.message.reply_text(message + "", parse_mode=ParseMode.MARKDOWN)
 
         try:
             await update.message.reply_photo(movie_properties.poster_uri)
         except telegram.error.BadRequest:
             logger.error(f"Failed to retrieve poster {movie_properties.poster_uri}")
-            message = get_message("No poster", chat_data.language_code)
-            await update.message.reply_text(message + "😞", parse_mode=ParseMode.MARKDOWN)
+            message = get_message("No poster😞", chat_data.language_code)
+            await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
 
         key_details = (
             "*" + f"{movie_properties.title}, {movie_properties.release_date}, {movie_properties.rating}/10" + "*" + "🍿"

@@ -32,5 +32,5 @@ msgstr ""
 msgid "No result. Please, change your query"
 msgstr ""
 
-msgid "No poster"
+msgid "No poster😞"
 msgstr ""

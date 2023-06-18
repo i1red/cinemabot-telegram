@@ -10,13 +10,13 @@ msgid "Change language"
 msgstr "Change language"
 
 msgid "Required arguments were not provided"
-msgstr "Не вказані необхідні аргументи команди"
+msgstr "Required arguments were not provided"
 
 msgid "Incorrect number of arguments"
-msgstr "Неправильна кількість аргументів команди"
+msgstr "Required arguments were not provided"
 
 msgid "Language not supported"
-msgstr "Мова не підтримується"
+msgstr "Language not supported"
 
 msgid "Filter by popularity"
 msgstr "Filter by popularity"
@@ -33,5 +33,5 @@ msgstr "Only the most popular films will be shown"
 msgid "No result. Please, change your query"
 msgstr "No result. Please, change your query"
 
-msgid "No poster"
-msgstr "No poster"
+msgid "No poster😞"
+msgstr "No poster😞"
