@@ -7,7 +7,8 @@ authors = ["Ivan Krasnoshchok <ivankras67@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 python-telegram-bot = "^20.3"
-tmdbsimple = "^2.9.1"
+httpx = "^0.24.1"
+attrs = "^23.1.0"
 
 [tool.poetry.dev-dependencies]
 

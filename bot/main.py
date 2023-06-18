@@ -1,23 +1,18 @@
 ﻿import logging
 import os
 import sys
-from typing import Final
 
 import telegram.error
-import tmdbsimple as tmdb
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, MessageHandler, ApplicationBuilder, filters, ContextTypes
 
 from bot.chat_data import ChatData
-from bot.utility.language import is_language_supported, get_language_name_map, LanguageCode
+from bot.movie import search_movies
+from bot.utility.language import is_language_supported, get_language_name_map
 from bot.utility.message import get_message
 
 logger = logging.getLogger(__name__)
-
-tmdb.API_KEY = os.getenv("TMDB_API_KEY")
-
-BASE_POSTER_PATH: Final[str] = "http://image.tmdb.org/t/p/w780"
 
 
 async def change_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -93,38 +88,34 @@ async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data = ChatData(context)
 
-    search = tmdb.Search()
     movie_query = update.message.text.lower()
-    search.movie(query=movie_query, language=chat_data.language_code)
+    movie_properties_list = search_movies(query=movie_query, language_code=chat_data.language_code)
 
-    if not search.results:
+    if not movie_properties_list:
         message = get_message("No result. Please, change your query", chat_data.language_code)
         await update.message.reply_text(message + "/help")
 
-    movie_properties_list = sorted(search.results, key=lambda movie_props: movie_props["popularity"], reverse=True)
+    movie_properties_list = sorted(movie_properties_list, key=lambda movie_props: movie_props.popularity, reverse=True)
     if chat_data.show_popular:
         movie_properties_list = movie_properties_list[:5]
 
     for movie_properties in movie_properties_list:
+        if movie_properties.poster_uri is None:
+            logger.info("Poster uri is None")
+            message = get_message("No poster", chat_data.language_code)
+            await update.message.reply_text(message + "😞", parse_mode=ParseMode.MARKDOWN)
+
         try:
-            poster_path = BASE_POSTER_PATH + movie_properties["poster_path"]
-            await update.message.reply_photo(poster_path)
-        except TypeError:
-            logger.error("Poster path is None")
-            message = get_message("No poster", chat_data.language_code)
-            await update.message.reply_text(message + "😞", parse_mode=ParseMode.MARKDOWN)
+            await update.message.reply_photo(movie_properties.poster_uri)
         except telegram.error.BadRequest:
-            logger.error(f"Failed to retrieve poster {poster_path}")
+            logger.error(f"Failed to retrieve poster {movie_properties.poster_uri}")
             message = get_message("No poster", chat_data.language_code)
             await update.message.reply_text(message + "😞", parse_mode=ParseMode.MARKDOWN)
 
-        title = movie_properties["title"]
-        release_date = movie_properties["release_date"]
-        rating = round(movie_properties["vote_average"], 1)
-        overview = movie_properties["overview"]
-
-        key_details = "*" + f"{title}, {release_date}, {rating}/10" + "*" + "🍿"
-        movie_info = key_details + "\n" + overview
+        key_details = (
+            "*" + f"{movie_properties.title}, {movie_properties.release_date}, {movie_properties.rating}/10" + "*" + "🍿"
+        )
+        movie_info = key_details + "\n" + movie_properties.overview
         await update.message.reply_text(movie_info, parse_mode=ParseMode.MARKDOWN)
 
 
