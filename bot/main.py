@@ -1,6 +1,7 @@
 ﻿import logging
 import os
 import sys
+from typing import Final
 
 import telegram.error
 from telegram import Update
@@ -15,7 +16,10 @@ from bot.utility.message import get_message
 logger = logging.getLogger(__name__)
 
 
-async def change_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+POPULAR_MOVIE_COUNT: Final[int] = 5
+
+
+async def change_language_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data = ChatData(context)
 
     try:
@@ -39,15 +43,15 @@ async def change_language(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(message + "/help")
 
 
-async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def show_help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data = ChatData(context)
 
-    change_language = (
+    change_language_options = (
         get_message("Change language", chat_data.language_code)
         + "\n"
         + "\n".join(f"/lang {lang_code} - {lang_name}" for lang_code, lang_name in get_language_name_map().items())
     )
-    filter = (
+    filter_options = (
         get_message("Filter by popularity", chat_data.language_code)
         + "\n"
         + "/show_all - "
@@ -57,10 +61,10 @@ async def help_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         + get_message("Only the most popular films will be shown", chat_data.language_code)
         + "\n"
     )
-    await update.message.reply_text(change_language + "\n" + filter)
+    await update.message.reply_text(change_language_options + "\n" + filter_options)
 
 
-async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def show_popular_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data = ChatData(context)
 
     chat_data.show_popular = True
@@ -69,7 +73,7 @@ async def show_popular(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text(message + "/help")
 
 
-async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def show_all_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data = ChatData(context)
 
     chat_data.show_popular = False
@@ -78,14 +82,14 @@ async def show_all(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(message + "/help")
 
 
-async def start_messaging(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start_messaging_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data = ChatData(context)
 
     message = get_message("Hi, what are you looking for?", chat_data.language_code)
     await update.message.reply_text(message + "/help")
 
 
-async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def query_movies_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_data = ChatData(context)
 
     movie_query = update.message.text.lower()
@@ -97,7 +101,7 @@ async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     movie_properties_list = sorted(movie_properties_list, key=lambda movie_props: movie_props.popularity, reverse=True)
     if chat_data.show_popular:
-        movie_properties_list = movie_properties_list[:5]
+        movie_properties_list = movie_properties_list[:POPULAR_MOVIE_COUNT]
 
     for movie_properties in movie_properties_list:
         if movie_properties.poster_uri is None:
@@ -121,12 +125,12 @@ async def query_movies(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 
-app.add_handler(CommandHandler("start", start_messaging))
-app.add_handler(CommandHandler("show_popular", show_popular))
-app.add_handler(CommandHandler("show_all", show_all))
-app.add_handler(CommandHandler("help", help_message))
-app.add_handler(CommandHandler("lang", change_language))
-app.add_handler(MessageHandler(filters.TEXT, query_movies))
+app.add_handler(CommandHandler("start", start_messaging_handler))
+app.add_handler(CommandHandler("show_popular", show_popular_handler))
+app.add_handler(CommandHandler("show_all", show_all_handler))
+app.add_handler(CommandHandler("help", show_help_handler))
+app.add_handler(CommandHandler("lang", change_language_handler))
+app.add_handler(MessageHandler(filters.TEXT, query_movies_handler))
 
 
 if __name__ == "__main__":
