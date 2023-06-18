@@ -1,0 +1,37 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: uk\n"
+
+msgid "Hi, what are you looking for?"
+msgstr "Привіт, що шукаєте?"
+
+msgid "Change language"
+msgstr "Змінити мову"
+
+msgid "Required arguments were not provided"
+msgstr "Required arguments were not provided"
+
+msgid "Incorrect number of arguments"
+msgstr "Incorrect number of arguments"
+
+msgid "Language not supported"
+msgstr "Language not supported"
+
+msgid "Filter by popularity"
+msgstr "Фільтрувати за популярністю"
+
+msgid "The language for displaying results has been changed successfully!"
+msgstr "Мову відображення результатів успішно змінено!"
+
+msgid "All found films will be shown"
+msgstr "Усі знайдені фільми будуть відображені"
+
+msgid "Only the most popular films will be shown"
+msgstr "Тільки айпопулярніші фільми будуть відображені"
+
+msgid "No result. Please, change your query"
+msgstr "Нічого не знайдено. Будь ласка, змініть запит"
+
+msgid "No poster"
+msgstr "Без постеру"

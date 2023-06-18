@@ -1,0 +1,36 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Hi, what are you looking for?"
+msgstr ""
+
+msgid "Change language"
+msgstr ""
+
+msgid "Required arguments were not provided"
+msgstr ""
+
+msgid "Incorrect number of arguments"
+msgstr ""
+
+msgid "Language not supported"
+msgstr ""
+
+msgid "Filter by popularity"
+msgstr ""
+
+msgid "The language for displaying results has been changed successfully!"
+msgstr ""
+
+msgid "All found films will be shown"
+msgstr ""
+
+msgid "Only the most popular films will be shown"
+msgstr ""
+
+msgid "No result. Please, change your query"
+msgstr ""
+
+msgid "No poster"
+msgstr ""
